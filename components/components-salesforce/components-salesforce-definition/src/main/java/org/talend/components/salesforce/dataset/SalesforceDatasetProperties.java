@@ -12,6 +12,8 @@
 // ============================================================================
 package org.talend.components.salesforce.dataset;
 
+import static org.talend.components.salesforce.SalesforceDefinition.DATAPREP_SOURCE_CLASS;
+import static org.talend.components.salesforce.SalesforceDefinition.getSandboxedInstance;
 import static org.talend.daikon.properties.property.PropertyFactory.newStringList;
 
 import java.io.IOException;
@@ -24,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.common.SchemaProperties;
 import org.talend.components.common.dataset.DatasetProperties;
-import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.common.SalesforceErrorCodes;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
@@ -41,8 +42,6 @@ import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 import org.talend.daikon.properties.property.StringProperty;
-import org.talend.daikon.runtime.RuntimeInfo;
-import org.talend.daikon.runtime.RuntimeUtil;
 import org.talend.daikon.sandbox.SandboxedInstance;
 
 public class SalesforceDatasetProperties extends PropertiesImpl implements DatasetProperties<SalesforceDatastoreProperties> {
@@ -114,10 +113,7 @@ public class SalesforceDatasetProperties extends PropertiesImpl implements Datas
     }
 
     private void runtimeTask(Consumer task) throws IOException {
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        RuntimeInfo runtimeInfo = SalesforceDefinition
-                .getCommonRuntimeInfo("org.talend.components.salesforce.runtime.dataprep.SalesforceDataprepSource");
-        try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo, classLoader)) {
+        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(DATAPREP_SOURCE_CLASS)) {
             SalesforceRuntimeSourceOrSink runtime = (SalesforceRuntimeSourceOrSink) sandboxedInstance.getInstance();
 
             SalesforceInputProperties properties = new SalesforceInputProperties("model");
@@ -175,8 +171,8 @@ public class SalesforceDatasetProperties extends PropertiesImpl implements Datas
     }
 
     /**
-     * the method is called back at many places, even some strange places, so it should work only for basic layout, not some
-     * action which need runtime support.
+     * the method is called back at many places, even some strange places, so it should work only for basic layout, not
+     * some action which need runtime support.
      */
     @Override
     public void refreshLayout(Form form) {
@@ -207,29 +203,32 @@ public class SalesforceDatasetProperties extends PropertiesImpl implements Datas
     }
 
     @Override
-    public void refreshProperties() {
-        try {
-            retrieveModules();
-            retrieveModuleFields();
-        } catch (IOException e) {
-            LOGGER.error("Cannot retrieve modules or field of a module", e);
-        }
-    }
-
-    @Override
     public SalesforceDatastoreProperties getDatastoreProperties() {
         return datastore.getReference();
     }
 
-    @Override
-    public void setDatastoreProperties(SalesforceDatastoreProperties datastoreProperties) {
-        datastore.setReference(datastoreProperties);
+    public void afterDatastore() {
         try {
             retrieveModules();
         } catch (IOException e) {
             LOGGER.error("error getting salesforce modules", e);
             throw new TalendRuntimeException(SalesforceErrorCodes.UNABLE_TO_RETRIEVE_MODULES, e);
         }
+        if (StringUtils.isNotEmpty(moduleName.getValue())) {
+            try {
+                retrieveModuleFields();
+            } catch (IOException e) {
+                LOGGER.error("error getting salesforce modules fields", e);
+                throw new TalendRuntimeException(SalesforceErrorCodes.UNABLE_TO_RETRIEVE_MODULE_FIELDS, e);
+            }
+        } // else no module set so no reason to update fields
+
+    }
+
+    @Override
+    public void setDatastoreProperties(SalesforceDatastoreProperties datastoreProperties) {
+        datastore.setReference(datastoreProperties);
+        afterDatastore();
     }
 
     public enum SourceType {

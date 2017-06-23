@@ -22,11 +22,11 @@ import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties
 
 public class MarketoComponentWizardBasePropertiesTest {
 
-    MarketoComponentWizardBaseProperties properties;
+    MarketoComponentWizardBaseProperties props;
 
     @Before
     public void setUp() throws Exception {
-        properties = new MarketoComponentWizardBaseProperties("test");
+        props = new MarketoComponentWizardBaseProperties("tests");
     }
 
     @Test
@@ -43,5 +43,15 @@ public class MarketoComponentWizardBasePropertiesTest {
         assertEquals(CustomObjectSyncAction.createOnly, CustomObjectSyncAction.valueOf("createOnly"));
         assertEquals(CustomObjectSyncAction.createOrUpdate, CustomObjectSyncAction.valueOf("createOrUpdate"));
         assertEquals(CustomObjectSyncAction.updateOnly, CustomObjectSyncAction.valueOf("updateOnly"));
+    }
+
+    @Test
+    public void testBeforeFormPresentFetchLeadSchema() throws Exception {
+        // TODO add test after TDI-38416
+    }
+
+    @Test
+    public void testAfterFetchLeadSchema() throws Exception {
+        // TODO add test after TDI-38416
     }
 }
