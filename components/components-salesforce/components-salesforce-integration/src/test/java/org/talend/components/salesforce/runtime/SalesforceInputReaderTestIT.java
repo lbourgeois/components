@@ -28,8 +28,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,9 +50,30 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SalesforceInputReaderTestIT.class);
 
-    @Before
-    public void setup() throws Throwable {
-        deleteAllAccountTestRows();
+    private static String randomizedValue;
+
+    @BeforeClass
+    public static void setup() throws Throwable {
+        randomizedValue = createNewRandom();
+
+        List<IndexedRecord> outputRows = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            GenericData.Record row = new GenericData.Record(getSchema(false));
+            row.put("Name", "Name_" + randomizedValue);
+            row.put("ShippingStreet", "123 Main Street");
+            row.put("ShippingPostalCode", Integer.toString(i));
+            row.put("BillingStreet", "123 Main Street");
+            row.put("BillingState", "CA");
+            row.put("BillingPostalCode", randomizedValue);
+            outputRows.add(row);
+        }
+
+        writeRows(outputRows);
+    }
+
+    @AfterClass
+    public static void cleanup() throws Throwable {
+        deleteAllAccountTestRows(randomizedValue);
     }
 
     public static Schema SCHEMA_QUERY_ACCOUNT = SchemaBuilder.builder().record("Schema").fields() //
@@ -65,7 +87,7 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
 
     @Test
     public void testStartAdvanceGetCurrent() throws IOException {
-        BoundedReader salesforceInputReader = createSalesforceInputReaderFromModule(EXISTING_MODULE_NAME);
+        BoundedReader<?> salesforceInputReader = createSalesforceInputReaderFromModule(EXISTING_MODULE_NAME, null);
         try {
             assertTrue(salesforceInputReader.start());
             assertTrue(salesforceInputReader.advance());
@@ -78,7 +100,7 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
     @Test(expected = IOException.class)
     public void testStartException() throws IOException {
         BoundedReader<IndexedRecord> salesforceInputReader = createSalesforceInputReaderFromModule(
-                SalesforceTestBase.NOT_EXISTING_MODULE_NAME);
+                SalesforceTestBase.NOT_EXISTING_MODULE_NAME, null);
         try {
             assertTrue(salesforceInputReader.start());
         } finally {
@@ -202,8 +224,7 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
         }
     }
 
-    @Override
-    public Schema getMakeRowSchema(boolean isDynamic) {
+    public static Schema getSchema(boolean isDynamic) {
         SchemaBuilder.FieldAssembler<Schema> fa = SchemaBuilder.builder().record("MakeRowRecord").fields() //
                 .name("Id").type().nullable().stringType().noDefault() //
                 .name("Name").type().nullable().stringType().noDefault() //
@@ -217,6 +238,11 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
         }
 
         return fa.endRecord();
+    }
+
+    @Override
+    public Schema getMakeRowSchema(boolean isDynamic) {
+        return getSchema(isDynamic);
     }
 
     @Test
@@ -346,7 +372,7 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
     public void testAggregrateQueryWithDateTypeAndBasicQuery() throws Throwable {
         TSalesforceInputProperties props = createTSalesforceInputProperties(true, false);
         props.manualQuery.setValue(true);
-        props.query.setValue("SELECT MIN(CreatedDate) VALUE FROM Contact GROUP BY FirstName, LastName");// alias is
+        props.query.setValue("SELECT MIN(CreatedDate) VALUE FROM Contact GROUP BY FirstName, LastName LIMIT 1");// alias is
                                                                                                         // necessary
                                                                                                         // and
                                                                                                         // should
@@ -371,7 +397,7 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
     public void testAggregrateQueryWithDateTypeAndStringOutputAndBasicQuery() throws Throwable {
         TSalesforceInputProperties props = createTSalesforceInputProperties(true, false);
         props.manualQuery.setValue(true);
-        props.query.setValue("SELECT MIN(CreatedDate) VALUE FROM Contact GROUP BY FirstName, LastName");// alias is
+        props.query.setValue("SELECT MIN(CreatedDate) VALUE FROM Contact GROUP BY FirstName, LastName LIMIT 1");// alias is
                                                                                                         // necessary
                                                                                                         // and
                                                                                                         // should

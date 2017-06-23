@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,8 +65,34 @@ public class SalesforceSessionReuseTestIT extends SalesforceTestBase {
 
     private static final String WRONG_PWD = "WRONG_PWD";
 
+    private static String randomizedValue;
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @BeforeClass
+    public static void setup() throws Throwable {
+        randomizedValue = createNewRandom();
+
+        List<IndexedRecord> outputRows = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            GenericData.Record row = new GenericData.Record(getSchema(false));
+            row.put("Name", "Name_" + randomizedValue);
+            row.put("ShippingStreet", "123 Main Street");
+            row.put("ShippingPostalCode", Integer.toString(i));
+            row.put("BillingStreet", "123 Main Street");
+            row.put("BillingState", "CA");
+            row.put("BillingPostalCode", randomizedValue);
+            outputRows.add(row);
+        }
+
+        writeRows(outputRows);
+    }
+
+    @AfterClass
+    public static void cleanup() throws Throwable {
+        deleteAllAccountTestRows(randomizedValue);
+    }
 
     /*
     * If the logic changes for this test please specify appropriate timeout.
@@ -161,7 +189,7 @@ public class SalesforceSessionReuseTestIT extends SalesforceTestBase {
             // Check whether the session disable by other test.
             ((PartnerConnection) connection).getUserInfo();
 
-            Property prop = (Property) f.getWidget("moduleName").getContent();
+            Property<?> prop = (Property<?>) f.getWidget("moduleName").getContent();
             assertTrue(prop.getPossibleValues().size() > 100);
             LOGGER.debug(moduleProps.getValidationResult().toString());
             assertEquals(ValidationResult.Result.OK, moduleProps.getValidationResult().getStatus());
@@ -277,9 +305,10 @@ public class SalesforceSessionReuseTestIT extends SalesforceTestBase {
         // Init session
         assertEquals(ValidationResult.Result.OK, testConnection(props).getStatus());
 
-        BoundedReader reader = createBoundedReader(props);
+        BoundedReader<?> reader = createBoundedReader(props);
         assertThat(reader, instanceOf(SalesforceBulkQueryInputReader.class));
-        boolean hasRecord = reader.start();
+
+        reader.start();
         // Invalid the session by session id
         String sessionIdBeforeRenew = ((SalesforceBulkQueryInputReader) reader).bulkRuntime.getBulkConnection().getConfig()
                 .getSessionId();
