@@ -31,8 +31,8 @@ public class MarketoComponentWizardBasePropertiesTest {
 
     @Test
     public void testGetAllSchemaPropertiesConnectors() throws Exception {
-        assertNull(properties.getAllSchemaPropertiesConnectors(true));
-        assertNull(properties.getAllSchemaPropertiesConnectors(false));
+        assertNull(props.getAllSchemaPropertiesConnectors(true));
+        assertNull(props.getAllSchemaPropertiesConnectors(false));
     }
 
     @Test
