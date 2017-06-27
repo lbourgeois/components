@@ -414,6 +414,7 @@ public class SalesforceTestBase extends AbstractComponentTest {
         List<IndexedRecord> rows = new ArrayList<>();
         try {
             salesforceInputReader.start();
+            rows.add((IndexedRecord) salesforceInputReader.getCurrent());
             while (salesforceInputReader.advance()) {
                 rows.add((IndexedRecord) salesforceInputReader.getCurrent());
             }

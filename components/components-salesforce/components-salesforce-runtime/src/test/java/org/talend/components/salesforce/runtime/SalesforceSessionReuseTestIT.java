@@ -72,7 +72,7 @@ public class SalesforceSessionReuseTestIT extends SalesforceTestBase {
 
     @BeforeClass
     public static void setup() throws Throwable {
-        randomizedValue = createNewRandom();
+        randomizedValue = "Unit_" + createNewRandom();
 
         List<IndexedRecord> outputRows = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -82,7 +82,7 @@ public class SalesforceSessionReuseTestIT extends SalesforceTestBase {
             row.put("ShippingPostalCode", Integer.toString(i));
             row.put("BillingStreet", "123 Main Street");
             row.put("BillingState", "CA");
-            row.put("BillingPostalCode", randomizedValue);
+            row.put("BillingPostalCode", createNewRandom());
             outputRows.add(row);
         }
 
