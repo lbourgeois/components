@@ -37,6 +37,12 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
     private Boolean hasRejectSchema = false;
 
     private IndexedRecordConverter converter = null;
+    
+    private ElementValidator elementValidator;
+
+    public FilterRowDoFn(ElementValidator elementValidator) {
+        this.elementValidator = elementValidator;
+    }
 
     @Setup
     public void setup() throws Exception {
@@ -44,37 +50,47 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     @ProcessElement
     public void processElement(ProcessContext context) {
-        if (converter == null) {
-            AvroRegistry registry = new AvroRegistry();
-            converter = registry.createIndexedRecordConverter(context.element().getClass());
+
+        // Element validation
+        boolean validElement = elementValidator.validate(context.element());
+
+        if (validElement) {
+
+            if (converter == null) {
+                AvroRegistry registry = new AvroRegistry();
+                converter = registry.createIndexedRecordConverter(context.element().getClass());
+            }
+            IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
+
+            boolean returnedBooleanValue = true;
+            String columnName = properties.columnName.getValue();
+
+            // If there is no defined input, we filter nothing
+            if (!StringUtils.isEmpty(columnName)) {
+                List<Object> inputValues = getInputFields(inputRecord, columnName);
+                if (inputValues.size() == 0) {
+                    // no valid field: reject the input
+                    returnedBooleanValue = false;
+                }
+
+                // TODO handle null with multiples values
+                for (Object inputValue : inputValues) {
+                    returnedBooleanValue = returnedBooleanValue && checkCondition(inputValue, properties);
+                }
+            }
+
+            if (returnedBooleanValue) {
+                if (hasOutputSchema) {
+                    context.output(inputRecord);
+                }
+            } else {
+                if (hasRejectSchema) {
+                    context.sideOutput(FilterRowRuntime.rejectOutput, inputRecord);
+                }
+            }
         }
-        IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
-
-        boolean returnedBooleanValue = true;
-        String columnName = properties.columnName.getValue();
-
-        // If there is no defined input, we filter nothing
-        if (!StringUtils.isEmpty(columnName)) {
-            List<Object> inputValues = getInputFields(inputRecord, columnName);
-            if (inputValues.size() == 0) {
-                // no valid field: reject the input
-                returnedBooleanValue = false;
-            }
-
-            // TODO handle null with multiples values
-            for (Object inputValue : inputValues) {
-                returnedBooleanValue = returnedBooleanValue && checkCondition(inputValue, properties);
-            }
-        }
-
-        if (returnedBooleanValue) {
-            if (hasOutputSchema) {
-                context.output(inputRecord);
-            }
-        } else {
-            if (hasRejectSchema) {
-                context.sideOutput(FilterRowRuntime.rejectOutput, inputRecord);
-            }
+        else {
+            // Element is discarded
         }
     }
 
@@ -115,7 +131,8 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
             // The column was existing on the input record, we forward it to the
             // output record.
             if (schema.getField(path[i]) == null) {
-                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT, new Throwable(String.format("The field %s is not present on the input record", columnName)));
+                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                        new Throwable(String.format("The field %s is not present on the input record", columnName)));
             }
             Object inputValue = inputRecord.get(schema.getField(path[i]).pos());
 

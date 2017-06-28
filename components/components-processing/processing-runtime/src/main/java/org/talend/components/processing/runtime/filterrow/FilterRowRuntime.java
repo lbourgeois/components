@@ -51,7 +51,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
 
 	@Override
 	public PCollectionTuple expand(PCollection<Object> inputPCollection) {
-		FilterRowDoFn doFn = new FilterRowDoFn() //
+		FilterRowDoFn doFn = new FilterRowDoFn(new ElementValidator()) //
 				.withProperties(properties) //
 				.withOutputSchema(hasFlow) //
 				.withRejectSchema(hasReject);
