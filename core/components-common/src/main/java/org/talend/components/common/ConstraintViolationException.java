@@ -1,4 +1,4 @@
-package org.talend.components.processing.runtime;
+package org.talend.components.common;
 
 
 /**

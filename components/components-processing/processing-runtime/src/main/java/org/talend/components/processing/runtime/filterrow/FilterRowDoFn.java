@@ -21,10 +21,10 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
+import org.talend.components.common.ElementConstraints;
+import org.talend.components.common.ConstraintViolationException;
 import org.talend.components.processing.filterrow.ConditionsRowConstant;
 import org.talend.components.processing.filterrow.FilterRowProperties;
-import org.talend.components.processing.runtime.ConstraintViolationException;
-import org.talend.components.processing.runtime.Constraints;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
 import org.talend.daikon.exception.TalendRuntimeException;
@@ -40,13 +40,13 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     private IndexedRecordConverter converter = null;
 
-    private Constraints inputConstraints = null;
+    private ElementConstraints inputConstraints = null;
 
     @Setup
     public void setup() throws Exception {
     }
 
-    public FilterRowDoFn(Constraints inputConstraints) {
+    public FilterRowDoFn(ElementConstraints inputConstraints) {
         this.inputConstraints = inputConstraints;
     }
 
@@ -62,7 +62,7 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
         try {
             // Element validation
             if (inputConstraints != null) {
-                inputConstraints.validate(inputRecord);
+                inputConstraints.validate(inputRecord, properties);
             }
 
             boolean returnedBooleanValue = true;

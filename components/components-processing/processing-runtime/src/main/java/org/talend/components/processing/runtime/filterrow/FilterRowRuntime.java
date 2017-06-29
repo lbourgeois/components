@@ -24,8 +24,8 @@ import org.talend.components.adapter.beam.BeamJobBuilder;
 import org.talend.components.adapter.beam.BeamJobContext;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.common.ElementConstraints;
 import org.talend.components.processing.filterrow.FilterRowProperties;
-import org.talend.components.processing.runtime.Constraints;
 import org.talend.daikon.properties.ValidationResult;
 
 public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectionTuple>
@@ -42,7 +42,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
 
     private FilterRowProperties properties;
 
-    private Constraints inputConstraints;
+    private ElementConstraints inputConstraints;
 
     private boolean hasFlow;
 
@@ -57,8 +57,6 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
     @Override
     public PCollectionTuple expand(PCollection<Object> inputPCollection) {
 
-        // TODO Wrap this DoFn is ExceptionHandlerDoFn
-        // TODO Externalize ElementValidator from DoFn
         FilterRowDoFn doFn = new FilterRowDoFn(this.inputConstraints) //
                 .withProperties(properties) //
                 .withOutputSchema(hasFlow) //
@@ -89,7 +87,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                     ctx.putPCollectionByLinkName(rejectLink, outputTuples.get(rejectOutput));
                 }
                 
-                // TODO Init inout Constraints
+                // TODO Init input Constraints
                 this.inputConstraints = null;
             }
         }
