@@ -23,6 +23,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.components.processing.filterrow.ConditionsRowConstant;
 import org.talend.components.processing.filterrow.FilterRowProperties;
+import org.talend.components.processing.runtime.ConstraintViolationException;
+import org.talend.components.processing.runtime.Constraints;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
 import org.talend.daikon.exception.TalendRuntimeException;
@@ -37,30 +39,29 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
     private Boolean hasRejectSchema = false;
 
     private IndexedRecordConverter converter = null;
-    
-    private ElementValidator elementValidator;
 
-    public FilterRowDoFn(ElementValidator elementValidator) {
-        this.elementValidator = elementValidator;
-    }
+    private Constraints inputConstraints = null;
 
     @Setup
     public void setup() throws Exception {
     }
 
+    public FilterRowDoFn(Constraints inputConstraints) {
+        this.inputConstraints = inputConstraints;
+    }
+
     @ProcessElement
-    public void processElement(ProcessContext context) {
+    public void processElement(ProcessContext context) throws ConstraintViolationException {
 
-        // Element validation
-        boolean validElement = elementValidator.validate(context.element());
+        if (converter == null) {
+            AvroRegistry registry = new AvroRegistry();
+            converter = registry.createIndexedRecordConverter(context.element().getClass());
+        }
+        IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
 
-        if (validElement) {
-
-            if (converter == null) {
-                AvroRegistry registry = new AvroRegistry();
-                converter = registry.createIndexedRecordConverter(context.element().getClass());
-            }
-            IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
+        try {
+            // Element validation
+            inputConstraints.validate(inputRecord);
 
             boolean returnedBooleanValue = true;
             String columnName = properties.columnName.getValue();
@@ -88,9 +89,8 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
                     context.sideOutput(FilterRowRuntime.rejectOutput, inputRecord);
                 }
             }
-        }
-        else {
-            // Element is discarded
+        } catch (ConstraintViolationException cve) {
+            context.sideOutput(FilterRowRuntime.discardOutput, inputRecord);
         }
     }
 
