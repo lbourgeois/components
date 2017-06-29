@@ -61,7 +61,9 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
         try {
             // Element validation
-            inputConstraints.validate(inputRecord);
+            if (inputConstraints != null) {
+                inputConstraints.validate(inputRecord);
+            }
 
             boolean returnedBooleanValue = true;
             String columnName = properties.columnName.getValue();
