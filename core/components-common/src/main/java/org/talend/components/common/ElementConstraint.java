@@ -1,16 +1,41 @@
 package org.talend.components.common;
 
+import org.apache.avro.generic.IndexedRecord;
+
 /**
  * Single constraint which can be applied to a pipeline element
  */
-public interface ElementConstraint {
+abstract class ElementConstraint {
+
+    /**
+     * Constraint description
+     */
+    private String description;
+
+    /**
+     * Constructor
+     * 
+     * @param description
+     */
+    public ElementConstraint(String description) {
+        this.description = description;
+    }
 
     /**
      * Validation method
      * 
-     * @param o element to validate
+     * @param element element to validate
      * @param properties component properties validation could depend on
      */
-    public void validate(Object o, FixedConnectorsComponentProperties properties);
+    abstract void validate(IndexedRecord element, FixedConnectorsComponentProperties properties);
+
+    /**
+     * Description getter
+     * 
+     * @return description
+     */
+    public String getDescription() {
+        return this.description;
+    }
 
 }
