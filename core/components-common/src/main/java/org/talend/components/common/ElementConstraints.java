@@ -3,6 +3,8 @@ package org.talend.components.common;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.avro.generic.IndexedRecord;
+
 /**
  * Contraints set that can be applied to a PCollection element
  *
@@ -23,8 +25,11 @@ public class ElementConstraints {
      * @param properties component properties
      * @throws ConstraintViolationException if the element do not satisfy a constraint
      */
-    public void validate(Object o, FixedConnectorsComponentProperties properties) throws ConstraintViolationException {
+    public void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
+            throws ConstraintViolationException {
 
+        for (ElementConstraint elementConstraint : constraints) {
+            elementConstraint.validate(element, properties);
+        }
     }
-
 }

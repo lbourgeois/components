@@ -3,16 +3,14 @@ package org.talend.components.common;
 import org.apache.avro.generic.IndexedRecord;
 
 
-public class ElementConstraintNumericValueWithInequalityOperator extends ElementConstraint {
+public abstract class ElementConstraintNumericValueWithInequalityOperator extends ElementConstraint {
 
-    public ElementConstraintNumericValueWithInequalityOperator(String description) {
-        super(description);
+    public ElementConstraintNumericValueWithInequalityOperator() {
+        super("Value must be numeric when using inequality operator");
     }
 
     @Override
-    void validate(IndexedRecord element, FixedConnectorsComponentProperties properties) {
-        // TODO Auto-generated method stub
-
-    }
+    public abstract void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
+            throws ConstraintViolationException;
 
 }

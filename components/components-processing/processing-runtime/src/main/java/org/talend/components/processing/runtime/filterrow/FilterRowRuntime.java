@@ -24,8 +24,6 @@ import org.talend.components.adapter.beam.BeamJobBuilder;
 import org.talend.components.adapter.beam.BeamJobContext;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.common.ElementConstraintColumnExists;
-import org.talend.components.common.ElementConstraintNumericValueWithInequalityOperator;
 import org.talend.components.common.ElementConstraints;
 import org.talend.components.processing.filterrow.FilterRowProperties;
 import org.talend.daikon.properties.ValidationResult;
@@ -90,11 +88,10 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                 }
                 
                 // Init input Constraints
+                // TODO Injection from FilterRowDefinition
                 this.inputConstraints = new ElementConstraints()//
-                        .add(new ElementConstraintColumnExists("Column must exists in the schema",
-                                properties.columnName.getValue()))//
-                        .add(new ElementConstraintNumericValueWithInequalityOperator(
-                                "Value must be numeric when usinig inequality operator"));
+                        .add(new FilterRowConstraintColumnExists(properties.columnName.getValue()))//
+                        .add(new FilterRowConstraintNumericValueWithInequalityOperator());
             }
         }
     }

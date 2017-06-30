@@ -21,8 +21,8 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
-import org.talend.components.common.ElementConstraints;
 import org.talend.components.common.ConstraintViolationException;
+import org.talend.components.common.ElementConstraints;
 import org.talend.components.processing.filterrow.ConditionsRowConstant;
 import org.talend.components.processing.filterrow.FilterRowProperties;
 import org.talend.daikon.avro.AvroRegistry;
@@ -44,6 +44,13 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     @Setup
     public void setup() throws Exception {
+    }
+
+    /**
+     * Default constructor
+     */
+    public FilterRowDoFn() {
+        // Nothing to do
     }
 
     public FilterRowDoFn(ElementConstraints inputConstraints) {
@@ -92,6 +99,7 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
                 }
             }
         } catch (ConstraintViolationException cve) {
+            // TODO Handle stop pipeline in this case
             context.sideOutput(FilterRowRuntime.discardOutput, inputRecord);
         }
     }

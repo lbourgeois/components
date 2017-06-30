@@ -27,7 +27,8 @@ abstract class ElementConstraint {
      * @param element element to validate
      * @param properties component properties validation could depend on
      */
-    abstract void validate(IndexedRecord element, FixedConnectorsComponentProperties properties);
+    abstract void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
+            throws ConstraintViolationException;
 
     /**
      * Description getter
