@@ -13,6 +13,8 @@ public abstract class ElementConstraintColumnExists extends ElementConstraint {
      */
     private String columnName;
 
+    public static final String ERROR_MESSAGE = "column $1%s not found";
+
     public ElementConstraintColumnExists(String columnName) {
         super("Column must exists in the schema");
         this.columnName = columnName;

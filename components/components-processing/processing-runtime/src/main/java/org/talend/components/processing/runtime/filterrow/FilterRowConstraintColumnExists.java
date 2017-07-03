@@ -17,7 +17,7 @@ public class FilterRowConstraintColumnExists extends ElementConstraintColumnExis
     public void validate(IndexedRecord input, FixedConnectorsComponentProperties properties) throws ConstraintViolationException {
         String columnName = ((FilterRowProperties) properties).columnName.getValue();
         if (!IndexedRecordUtil.hasColumn(input, columnName)) {
-            throw new ConstraintViolationException(String.format("%s column not found", columnName));
+            throw new ConstraintViolationException(String.format(ElementConstraintColumnExists.ERROR_MESSAGE, columnName));
         }
     }
 }
