@@ -8,20 +8,6 @@ import org.apache.avro.generic.IndexedRecord;
 abstract class ElementConstraint {
 
     /**
-     * Constraint description
-     */
-    private String description;
-
-    /**
-     * Constructor
-     * 
-     * @param description
-     */
-    public ElementConstraint(String description) {
-        this.description = description;
-    }
-
-    /**
      * Validation method
      * 
      * @param element element to validate
@@ -29,14 +15,4 @@ abstract class ElementConstraint {
      */
     abstract void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
             throws ConstraintViolationException;
-
-    /**
-     * Description getter
-     * 
-     * @return description
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
 }

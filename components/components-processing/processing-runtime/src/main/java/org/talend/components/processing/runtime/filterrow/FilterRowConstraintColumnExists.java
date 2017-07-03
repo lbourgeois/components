@@ -9,10 +9,6 @@ import org.talend.components.processing.filterrow.FilterRowProperties;
 
 public class FilterRowConstraintColumnExists extends ElementConstraintColumnExists {
 
-    public FilterRowConstraintColumnExists(String columnName) {
-        super(columnName);
-    }
-
     @Override
     public void validate(IndexedRecord input, FixedConnectorsComponentProperties properties) throws ConstraintViolationException {
         String columnName = ((FilterRowProperties) properties).columnName.getValue();

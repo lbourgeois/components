@@ -97,7 +97,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                 // Init input Constraints
                 // TODO Injection from FilterRowDefinition
                 this.inputConstraints = new ElementConstraints()//
-                        .add(new FilterRowConstraintColumnExists(properties.columnName.getValue()))//
+                        .add(new FilterRowConstraintColumnExists())//
                         .add(new FilterRowConstraintNumericValueWithInequalityOperator());
             }
         }
