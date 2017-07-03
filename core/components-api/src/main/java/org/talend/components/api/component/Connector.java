@@ -38,6 +38,11 @@ public interface Connector extends NamedThing {
     String REJECT_NAME = "REJECT"; //$NON-NLS-1$
 
     /**
+     * constant used to identify the discard output on a job
+     */
+    String DISCARD_NAME = "DISCARD";
+
+    /**
      * This method shall return a unique name for a given set of connectors so that the client can unically identify it.
      */
     @Override

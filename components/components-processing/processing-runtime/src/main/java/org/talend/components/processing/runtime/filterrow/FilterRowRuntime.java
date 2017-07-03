@@ -22,6 +22,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.components.adapter.beam.BeamJobBuilder;
 import org.talend.components.adapter.beam.BeamJobContext;
+import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.ElementConstraints;
@@ -48,6 +49,8 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
 
     private boolean hasReject;
 
+    private boolean stopPipelineOnError;
+
     @Override
     public ValidationResult initialize(RuntimeContainer container, FilterRowProperties componentProperties) {
         this.properties = componentProperties;
@@ -57,13 +60,13 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
     @Override
     public PCollectionTuple expand(PCollection<Object> inputPCollection) {
 
-        FilterRowDoFn doFn = new FilterRowDoFn(this.inputConstraints) //
+        FilterRowDoFn doFn = new FilterRowDoFn(this.inputConstraints, this.stopPipelineOnError) //
                 .withProperties(properties) //
                 .withOutputSchema(hasFlow) //
                 .withRejectSchema(hasReject);
 
         return inputPCollection.apply(properties.getName(),
-                ParDo.withOutputTags(flowOutput, TupleTagList.of(rejectOutput)).of(doFn));
+                ParDo.withOutputTags(flowOutput, TupleTagList.of(rejectOutput).and(discardOutput)).of(doFn));
     }
 
     @Override
@@ -71,6 +74,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
         String mainLink = ctx.getLinkNameByPortName("input_" + properties.MAIN_CONNECTOR.getName());
         if (!StringUtils.isEmpty(mainLink)) {
             PCollection<Object> mainPCollection = ctx.getPCollectionByLinkName(mainLink);
+            this.stopPipelineOnError = ctx.stopPipelineOnError();
             if (mainPCollection != null) {
                 String flowLink = ctx.getLinkNameByPortName("output_" + properties.FLOW_CONNECTOR.getName());
                 String rejectLink = ctx.getLinkNameByPortName("output_" + properties.REJECT_CONNECTOR.getName());
@@ -85,6 +89,9 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                 }
                 if (hasReject) {
                     ctx.putPCollectionByLinkName(rejectLink, outputTuples.get(rejectOutput));
+                }
+                if (!this.stopPipelineOnError) {
+                    ctx.putPCollectionByLinkName(Connector.DISCARD_NAME, outputTuples.get(discardOutput));
                 }
                 
                 // Init input Constraints

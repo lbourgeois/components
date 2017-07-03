@@ -42,6 +42,8 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     private ElementConstraints inputConstraints = null;
 
+    private boolean stopPipelineOnError;
+
     @Setup
     public void setup() throws Exception {
     }
@@ -53,8 +55,9 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
         // Nothing to do
     }
 
-    public FilterRowDoFn(ElementConstraints inputConstraints) {
+    public FilterRowDoFn(ElementConstraints inputConstraints, boolean stopPipelineOnError) {
         this.inputConstraints = inputConstraints;
+        this.stopPipelineOnError = stopPipelineOnError;
     }
 
     @ProcessElement
@@ -99,7 +102,9 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
                 }
             }
         } catch (ConstraintViolationException cve) {
-            // TODO Handle stop pipeline in this case
+            if (stopPipelineOnError) {
+                throw cve; // TODO Chek if this kind of exception stops pipeline
+            }
             context.sideOutput(FilterRowRuntime.discardOutput, inputRecord);
         }
     }
