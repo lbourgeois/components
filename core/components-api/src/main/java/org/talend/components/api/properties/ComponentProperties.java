@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
+import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.daikon.properties.Properties;
 
 /**
@@ -79,5 +80,12 @@ public interface ComponentProperties extends Properties {
      */
     boolean updateNestedProperties(final Properties nestedValues);
 
-
+    /**
+     * return element constraints for a given connector
+     * 
+     * @param connector
+     * @param isOutgoingConnection
+     * @return
+     */
+    ElementConstraints getElementConstraints(Connector connector, boolean isOutgoingConnection);
 }

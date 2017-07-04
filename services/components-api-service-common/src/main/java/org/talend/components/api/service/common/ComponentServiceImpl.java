@@ -223,5 +223,4 @@ public class ComponentServiceImpl extends PropertiesServiceImpl implements Compo
     public void setSchema(ComponentProperties componentProperties, Connector connector, Schema schema, boolean isOuput) {
         componentProperties.setConnectedSchema(connector, schema, isOuput);
     }
-
 }

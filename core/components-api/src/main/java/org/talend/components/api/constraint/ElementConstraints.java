@@ -1,9 +1,11 @@
-package org.talend.components.common;
+package org.talend.components.api.constraint;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.avro.generic.IndexedRecord;
+import org.talend.components.api.exception.ConstraintViolationException;
+import org.talend.components.api.properties.ComponentProperties;
 
 /**
  * Contraints set that can be applied to a PCollection element
@@ -25,7 +27,7 @@ public class ElementConstraints {
      * @param properties component properties
      * @throws ConstraintViolationException if the element do not satisfy a constraint
      */
-    public void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
+    public void validate(IndexedRecord element, ComponentProperties properties)
             throws ConstraintViolationException {
 
         for (ElementConstraint elementConstraint : constraints) {

@@ -202,7 +202,7 @@ public interface ComponentService extends PropertiesService<Properties> {
      * @param componentProperties the Properties to get the connectors from
      * @param connectedConnetor list of connectors already setup. This shall be managed by the client.
      * @param isOuput true is the requested connections are output connections, false if the request is on input
-     *            connections
+     * connections
      * @return the set of availalble connectors, may be empty.
      */
     Set<? extends Connector> getAvailableConnectors(ComponentProperties componentProperties,

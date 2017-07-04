@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
+import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.PropertiesVisitor;
@@ -122,5 +123,13 @@ public class ComponentPropertiesImpl extends PropertiesImpl implements Component
 
         }, this);
         return isCopied.get();
+    }
+
+    /**
+     * Get the constraints on elements entering or exiting on a given connector
+     */
+    @Override
+    public ElementConstraints getElementConstraints(Connector connector, boolean isOutgoingConnection) {
+        return null;
     }
 }

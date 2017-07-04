@@ -20,6 +20,7 @@ import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.api.component.PropertyPathConnector;
+import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.presentation.Form;
@@ -198,4 +199,15 @@ public class FilterRowProperties extends FixedConnectorsComponentProperties {
         return Schema.Type.INT.equals(type) || Schema.Type.LONG.equals(type) //
                 || Schema.Type.DOUBLE.equals(type) || Schema.Type.FLOAT.equals(type);
     }
+
+   @Override
+    public ElementConstraints getElementConstraints(Connector connector, boolean isOutgoingConnection){
+       // Defines constraints on main input connector
+        if (!isOutgoingConnection && Connector.MAIN_NAME.equals(connector.getName())) {
+           return new ElementConstraints()//
+                    .add(new FilterRowConstraintColumnExists())//
+                    .add(new FilterRowConstraintNumericValueWithInequalityOperator());
+       }
+       return null;
+   }
 }

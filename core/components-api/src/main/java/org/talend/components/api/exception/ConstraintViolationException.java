@@ -1,4 +1,4 @@
-package org.talend.components.common;
+package org.talend.components.api.exception;
 
 
 /**

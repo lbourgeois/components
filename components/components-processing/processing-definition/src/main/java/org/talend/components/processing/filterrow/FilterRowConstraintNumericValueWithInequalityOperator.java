@@ -1,20 +1,18 @@
-package org.talend.components.processing.runtime.filterrow;
+package org.talend.components.processing.filterrow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.avro.generic.IndexedRecord;
-import org.talend.components.common.ConstraintViolationException;
+import org.talend.components.api.exception.ConstraintViolationException;
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.common.ElementConstraintNumericValueWithInequalityOperator;
-import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.IndexedRecordUtil;
-import org.talend.components.processing.filterrow.ConditionsRowConstant;
-import org.talend.components.processing.filterrow.FilterRowProperties;
 
 public class FilterRowConstraintNumericValueWithInequalityOperator extends ElementConstraintNumericValueWithInequalityOperator {
 
     @Override
-    public void validate(IndexedRecord element, FixedConnectorsComponentProperties properties)
+    public void validate(IndexedRecord element, ComponentProperties properties)
             throws ConstraintViolationException {
 
         String operator = ((FilterRowProperties) properties).operator.getValue();

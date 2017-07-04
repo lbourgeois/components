@@ -12,6 +12,8 @@
 // ============================================================================
 package org.talend.components.processing.runtime.filterrow;
 
+import java.util.Set;
+
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -24,8 +26,9 @@ import org.talend.components.adapter.beam.BeamJobBuilder;
 import org.talend.components.adapter.beam.BeamJobContext;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
+import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.common.ElementConstraints;
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.processing.filterrow.FilterRowProperties;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -94,12 +97,31 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                     ctx.putPCollectionByLinkName(Connector.DISCARD_NAME, outputTuples.get(discardOutput));
                 }
                 
-                // Init input Constraints
-                // TODO Injection from FilterRowDefinition
-                this.inputConstraints = new ElementConstraints()//
-                        .add(new FilterRowConstraintColumnExists())//
-                        .add(new FilterRowConstraintNumericValueWithInequalityOperator());
+                // Get input constraints from main input connector
+                this.inputConstraints = properties.getElementConstraints(properties.MAIN_CONNECTOR, false);
             }
         }
+    }
+
+    /**
+     * TODO move this method to a higher level
+     * 
+     * @param properties
+     * @return
+     */
+    public static ElementConstraints getMainInputConnectorConstraints(ComponentProperties properties) {
+        Set<? extends Connector> inputConnectors = properties.getPossibleConnectors(false);
+
+        if (inputConnectors == null) {
+            return null;
+        }
+
+        for (Connector connector : inputConnectors) {
+            if (Connector.MAIN_NAME.equals(connector.getName())) {
+                return properties.getElementConstraints(connector, false);
+            }
+        }
+
+        return null;
     }
 }

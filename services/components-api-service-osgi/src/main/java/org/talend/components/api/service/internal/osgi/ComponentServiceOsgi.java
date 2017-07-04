@@ -202,5 +202,4 @@ public class ComponentServiceOsgi implements ComponentService {
     public RuntimeInfo getRuntimeInfo(String componentName, ExecutionEngine engine, Properties properties, ConnectorTopology componentType) {
         return componentServiceDelegate.getRuntimeInfo(componentName, engine, properties, componentType);
     }
-
 }
