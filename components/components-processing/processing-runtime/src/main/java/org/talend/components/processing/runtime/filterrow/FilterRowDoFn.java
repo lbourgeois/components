@@ -42,7 +42,7 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     private ElementConstraints inputConstraints = null;
 
-    private boolean stopPipelineOnError;
+    private boolean stopPipelineOnError = true;
 
     @Setup
     public void setup() throws Exception {
@@ -53,11 +53,6 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
      */
     public FilterRowDoFn() {
         // Nothing to do
-    }
-
-    public FilterRowDoFn(ElementConstraints inputConstraints, boolean stopPipelineOnError) {
-        this.inputConstraints = inputConstraints;
-        this.stopPipelineOnError = stopPipelineOnError;
     }
 
     @ProcessElement
@@ -193,6 +188,16 @@ public class FilterRowDoFn extends DoFn<Object, IndexedRecord> {
 
     public FilterRowDoFn withProperties(FilterRowProperties properties) {
         this.properties = properties;
+        return this;
+    }
+
+    public FilterRowDoFn withInputContraints(ElementConstraints inputConstraints) {
+        this.inputConstraints = inputConstraints;
+        return this;
+    }
+
+    public FilterRowDoFn withStopPipelineOnError(boolean stopPipelineOnError) {
+        this.stopPipelineOnError = stopPipelineOnError;
         return this;
     }
 }

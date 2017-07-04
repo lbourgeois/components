@@ -63,10 +63,12 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
     @Override
     public PCollectionTuple expand(PCollection<Object> inputPCollection) {
 
-        FilterRowDoFn doFn = new FilterRowDoFn(this.inputConstraints, this.stopPipelineOnError) //
+        FilterRowDoFn doFn = new FilterRowDoFn() //
                 .withProperties(properties) //
                 .withOutputSchema(hasFlow) //
-                .withRejectSchema(hasReject);
+                .withRejectSchema(hasReject)//
+                .withInputContraints(inputConstraints)//
+                .withStopPipelineOnError(stopPipelineOnError);//
 
         return inputPCollection.apply(properties.getName(),
                 ParDo.withOutputTags(flowOutput, TupleTagList.of(rejectOutput).and(discardOutput)).of(doFn));

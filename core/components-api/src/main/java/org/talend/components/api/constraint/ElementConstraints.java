@@ -1,5 +1,6 @@
 package org.talend.components.api.constraint;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -11,12 +12,12 @@ import org.talend.components.api.properties.ComponentProperties;
  * Contraints set that can be applied to a PCollection element
  *
  */
-public class ElementConstraints {
+public class ElementConstraints implements Serializable {
 
     private Collection<ElementConstraint> constraints = new ArrayList<ElementConstraint>();
     
-    public ElementConstraints add(ElementConstraint e) {
-        this.add(e);
+    public ElementConstraints add(ElementConstraint elementConstraint) {
+        constraints.add(elementConstraint);
         return this;
     }
     

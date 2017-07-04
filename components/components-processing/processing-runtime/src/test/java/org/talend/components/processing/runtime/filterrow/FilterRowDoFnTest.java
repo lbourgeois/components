@@ -24,7 +24,10 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.util.Utf8;
 import org.apache.beam.sdk.transforms.DoFnTester;
 import org.junit.Test;
+import org.talend.components.api.constraint.ElementConstraints;
+import org.talend.components.api.exception.ConstraintViolationException;
 import org.talend.components.processing.filterrow.ConditionsRowConstant;
+import org.talend.components.processing.filterrow.FilterRowConstraintNumericValueWithInequalityOperator;
 import org.talend.components.processing.filterrow.FilterRowProperties;
 import org.talend.daikon.exception.TalendRuntimeException;
 
@@ -697,6 +700,30 @@ public class FilterRowDoFnTest {
         properties.value.setValue("aa");
 
         runSimpleTestInvalidSession(properties);
+    }
+
+    @Test(expected = ConstraintViolationException.class)
+    public void test_InputConstraintNumericValueViolated() throws Exception {
+        FilterRowProperties properties = new FilterRowProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.columnName.setValue("a");
+        properties.operator.setValue(ConditionsRowConstant.Operator.LOWER);
+        properties.value.setValue("10");
+
+        ElementConstraints inputConstraints = new ElementConstraints()
+                .add(new FilterRowConstraintNumericValueWithInequalityOperator());
+
+        FilterRowDoFn function = new FilterRowDoFn().withProperties(properties) //
+                .withOutputSchema(false)//
+                .withRejectSchema(false)//
+                .withInputContraints(inputConstraints);
+
+        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord);
+        assertEquals(0, outputs.size());
+        List<IndexedRecord> rejects = fnTester.takeSideOutputElements(FilterRowRuntime.rejectOutput);
+        // assertEquals(0, rejects.size());
     }
 
     // TODO test function and operator on every single type
