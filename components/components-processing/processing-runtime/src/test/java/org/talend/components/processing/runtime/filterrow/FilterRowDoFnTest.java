@@ -746,7 +746,7 @@ public class FilterRowDoFnTest {
         assertEquals(1, outputs.size());
     }
 
-    @Test
+    @Test(expected = ConstraintViolationException.class)
     public void test_InputConstraintColumnExistsViolated() throws Exception {
         FilterRowProperties properties = new FilterRowProperties("test");
         properties.init();
