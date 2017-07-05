@@ -32,6 +32,8 @@ import org.talend.daikon.properties.property.PropertyFactory;
  */
 public abstract class FixedConnectorsComponentProperties extends ComponentPropertiesImpl {
 
+    public Property<Boolean> stopOnError = PropertyFactory.newBoolean("stopOnError").setValue(false);
+
     /**
      * FixedSchemaComponentProperties constructor comment.
      * 

@@ -79,7 +79,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
         String mainLink = ctx.getLinkNameByPortName("input_" + properties.MAIN_CONNECTOR.getName());
         if (!StringUtils.isEmpty(mainLink)) {
             PCollection<Object> mainPCollection = ctx.getPCollectionByLinkName(mainLink);
-            this.stopPipelineOnError = ctx.stopPipelineOnError();
+            this.stopPipelineOnError = properties.stopOnError.getValue();
             if (mainPCollection != null) {
                 String flowLink = ctx.getLinkNameByPortName("output_" + properties.FLOW_CONNECTOR.getName());
                 String rejectLink = ctx.getLinkNameByPortName("output_" + properties.REJECT_CONNECTOR.getName());

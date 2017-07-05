@@ -56,13 +56,4 @@ public interface BeamJobContext {
      * @return The Beam Pipeline currently under construction in the job.
      */
     Pipeline getPipeline();
-
-    /**
-     * Flag to set if the pipeline if stopped when an error occurs on an input element or if this input is collected in
-     * the discard collection and the pipeline continues
-     * 
-     * @return
-     */
-    boolean stopPipelineOnError();
-
 }
