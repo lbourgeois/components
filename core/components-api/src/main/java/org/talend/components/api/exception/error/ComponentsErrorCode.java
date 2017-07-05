@@ -33,6 +33,8 @@ public enum ComponentsErrorCode implements ErrorCode {
     ,WRONG_EXECUTION_ENGINE(HttpServletResponse.SC_BAD_REQUEST, "component", "requested", "available") //$NON-NLS-1$
     /** thrown when a IOException is caught */
     ,IO_EXCEPTION(HttpServletResponse.SC_EXPECTATION_FAILED)//
+    ,
+    CONSTRAINT_EXCEPTION(HttpServletResponse.SC_EXPECTATION_FAILED)
     ;
 
     private DefaultErrorCode errorCodeDelegate;

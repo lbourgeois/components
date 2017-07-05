@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.components.api.exception.ConstraintViolationException;
 import org.talend.components.processing.filterrow.ConditionsRowConstant;
+import org.talend.components.processing.filterrow.FilterRowConstraintColumnExists;
 import org.talend.components.processing.filterrow.FilterRowConstraintNumericValueWithInequalityOperator;
 import org.talend.components.processing.filterrow.FilterRowProperties;
 import org.talend.daikon.exception.TalendRuntimeException;
@@ -721,9 +722,49 @@ public class FilterRowDoFnTest {
 
         DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord);
-        assertEquals(0, outputs.size());
-        List<IndexedRecord> rejects = fnTester.takeSideOutputElements(FilterRowRuntime.rejectOutput);
-        // assertEquals(0, rejects.size());
+    }
+
+    @Test
+    public void test_InputConstraintNumericValuePassed() throws Exception {
+        FilterRowProperties properties = new FilterRowProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.columnName.setValue("a");
+        properties.operator.setValue(ConditionsRowConstant.Operator.LOWER);
+        properties.value.setValue("20");
+
+        ElementConstraints inputConstraints = new ElementConstraints()
+                .add(new FilterRowConstraintNumericValueWithInequalityOperator());
+
+        FilterRowDoFn function = new FilterRowDoFn().withProperties(properties) //
+                .withOutputSchema(true)//
+                .withRejectSchema(false)//
+                .withInputContraints(inputConstraints);
+
+        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputNumericRecord);
+        assertEquals(1, outputs.size());
+    }
+
+    @Test
+    public void test_InputConstraintColumnExistsViolated() throws Exception {
+        FilterRowProperties properties = new FilterRowProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.columnName.setValue("d");
+        properties.operator.setValue(ConditionsRowConstant.Operator.LOWER);
+        properties.value.setValue("10");
+
+        ElementConstraints inputConstraints = new ElementConstraints()
+                .add(new FilterRowConstraintColumnExists());
+
+        FilterRowDoFn function = new FilterRowDoFn().withProperties(properties) //
+                .withOutputSchema(false)//
+                .withRejectSchema(false)//
+                .withInputContraints(inputConstraints);
+
+        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord);
     }
 
     // TODO test function and operator on every single type

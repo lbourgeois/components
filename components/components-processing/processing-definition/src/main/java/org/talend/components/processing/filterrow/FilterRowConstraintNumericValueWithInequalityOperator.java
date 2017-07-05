@@ -12,8 +12,7 @@ import org.talend.components.common.IndexedRecordUtil;
 public class FilterRowConstraintNumericValueWithInequalityOperator extends ElementConstraintNumericValueWithInequalityOperator {
 
     @Override
-    public void validate(IndexedRecord element, ComponentProperties properties)
-            throws ConstraintViolationException {
+    public void validate(IndexedRecord element, ComponentProperties properties) throws ConstraintViolationException {
 
         String operator = ((FilterRowProperties) properties).operator.getValue();
         String columnName = ((FilterRowProperties) properties).columnName.getValue();
@@ -23,8 +22,12 @@ public class FilterRowConstraintNumericValueWithInequalityOperator extends Eleme
         if (inequalityOperators.contains(operator)) {
             Object value = IndexedRecordUtil.getField(columnName, element);
             if (!(value instanceof Number)) {
-                throw new ConstraintViolationException(
-                        String.format(ElementConstraintNumericValueWithInequalityOperator.ERROR_MESSAGE, columnName, value));
+                try {
+                    Float.valueOf(value.toString());
+                } catch (NumberFormatException nfe) {
+                    throw new ConstraintViolationException(
+                            String.format(ElementConstraintNumericValueWithInequalityOperator.ERROR_MESSAGE, columnName, value));
+                }
             }
         }
     }

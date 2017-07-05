@@ -11,7 +11,7 @@ import org.talend.components.api.properties.ComponentProperties;
  */
 public abstract class ElementConstraintColumnExists implements ElementConstraint {
 
-    public static final String ERROR_MESSAGE = "column $1%s not found";
+    public static final String ERROR_MESSAGE = "column %s not found";
 
     @Override
     public abstract void validate(IndexedRecord input, ComponentProperties properties)
