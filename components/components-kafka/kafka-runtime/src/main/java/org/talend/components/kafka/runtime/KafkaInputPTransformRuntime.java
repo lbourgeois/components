@@ -13,17 +13,17 @@
 package org.talend.components.kafka.runtime;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.beam.sdk.coders.ByteArrayCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.io.kafka.KafkaRecord;
@@ -39,6 +39,8 @@ import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.ConstraintViolationException;
+import org.talend.components.common.ElementConstraintCompatibleSchema;
 import org.talend.components.kafka.input.KafkaInputProperties;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -75,7 +77,8 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
                 // use component's schema directly as we are avro natural
                 schema = properties.getDatasetProperties().main.schema.getValue();
             }
-            return kafkaRecords.apply(ParDo.of(new ConvertToAvro(schema.toString()))).setCoder(getDefaultOutputCoder());
+            return kafkaRecords.apply(ParDo.of(new ConvertToAvro(schema.toString(), properties.stopOnError.getValue())))
+                    .setCoder(getDefaultOutputCoder());
         }
         case CSV: {
             // FIXME(bchen) KafkaAvroRegistry do not have way to record adaptation, it infer schema by the data rather
@@ -119,19 +122,41 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
 
         private transient BinaryDecoder decoder;
 
-        ConvertToAvro(String schemaStr) {
+        private transient boolean stopOnError = false;
+
+        ConvertToAvro(String schemaStr, boolean stopOnError) {
             this.schemaStr = schemaStr;
+            this.stopOnError = stopOnError;
         }
 
         @DoFn.ProcessElement
-        public void processElement(ProcessContext c) throws IOException {
+        public void processElement(ProcessContext c) throws IOException, ConstraintViolationException {
             if (schema == null) {
                 schema = new Schema.Parser().parse(schemaStr);
                 datumReader = new GenericDatumReader<GenericRecord>(schema);
             }
             decoder = DecoderFactory.get().binaryDecoder(c.element(), decoder);
-            GenericRecord record = datumReader.read(null, decoder);
-            c.output(record);
+            try {
+                GenericRecord record = datumReader.read(null, decoder);
+
+                // Check schema compatibility
+                SchemaPairCompatibility schemaCompatibility = SchemaCompatibility.checkReaderWriterCompatibility(schema,
+                        record.getSchema());
+                if (!SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE.equals(schemaCompatibility.getType())) {
+                    throw new ConstraintViolationException(ElementConstraintCompatibleSchema.ERROR_MESSAGE);
+                }
+
+                c.output(record);
+            }
+            catch (IOException | ConstraintViolationException ex) {
+                if (stopOnError){
+                    throw ex;
+                }
+                else {
+                    // Redirect to a discard output (to be implemented)
+                }
+            }
+
         }
     }
 
