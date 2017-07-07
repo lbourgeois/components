@@ -68,7 +68,7 @@ public class FilterRowRuntime extends PTransform<PCollection<Object>, PCollectio
                 .withOutputSchema(hasFlow) //
                 .withRejectSchema(hasReject)//
                 .withInputContraints(inputConstraints)//
-                .withStopPipelineOnError(stopPipelineOnError);//
+                .withStopPipelineOnError(stopPipelineOnError);// TODO Can be obtained in properties
 
         return inputPCollection.apply(properties.getName(),
                 ParDo.withOutputTags(flowOutput, TupleTagList.of(rejectOutput).and(discardOutput)).of(doFn));

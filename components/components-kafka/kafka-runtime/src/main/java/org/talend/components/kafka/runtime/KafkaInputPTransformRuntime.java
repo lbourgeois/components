@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaCompatibility;
-import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
@@ -38,9 +36,10 @@ import org.joda.time.Duration;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
+import org.talend.components.api.constraint.ElementConstraints;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.exception.ConstraintViolationException;
-import org.talend.components.common.ElementConstraintCompatibleSchema;
+import org.talend.components.kafka.input.KafkaInputConstraintCompatibleSchema;
 import org.talend.components.kafka.input.KafkaInputProperties;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -77,7 +76,7 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
                 // use component's schema directly as we are avro natural
                 schema = properties.getDatasetProperties().main.schema.getValue();
             }
-            return kafkaRecords.apply(ParDo.of(new ConvertToAvro(schema.toString(), properties.stopOnError.getValue())))
+            return kafkaRecords.apply(ParDo.of(new ConvertToAvro().withProperties(properties)))
                     .setCoder(getDefaultOutputCoder());
         }
         case CSV: {
@@ -114,8 +113,6 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
 
     public static class ConvertToAvro extends DoFn<byte[], IndexedRecord> {
 
-        private final String schemaStr;
-
         private transient Schema schema;
 
         private transient DatumReader<GenericRecord> datumReader;
@@ -124,15 +121,28 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
 
         private transient boolean stopOnError = false;
 
-        ConvertToAvro(String schemaStr, boolean stopOnError) {
-            this.schemaStr = schemaStr;
-            this.stopOnError = stopOnError;
+        private transient ElementConstraints constraints;
+
+        private transient KafkaInputProperties properties;
+
+        // ConvertToAvro(String schemaStr, boolean stopOnError) {
+        // this.schemaStr = schemaStr;
+        // this.stopOnError = stopOnError;
+        // }
+
+        public ConvertToAvro() {
+            // TODO Auto-generated constructor stub
+        }
+
+        public DoFn<byte[], IndexedRecord> withProperties(KafkaInputProperties properties) {
+            this.properties = properties;
+            return this;
         }
 
         @DoFn.ProcessElement
         public void processElement(ProcessContext c) throws IOException, ConstraintViolationException {
             if (schema == null) {
-                schema = new Schema.Parser().parse(schemaStr);
+                schema = properties.getDatasetProperties().main.schema.getValue();
                 datumReader = new GenericDatumReader<GenericRecord>(schema);
             }
             decoder = DecoderFactory.get().binaryDecoder(c.element(), decoder);
@@ -140,12 +150,7 @@ public class KafkaInputPTransformRuntime extends PTransform<PBegin, PCollection<
                 GenericRecord record = datumReader.read(null, decoder);
 
                 // Check schema compatibility
-                SchemaPairCompatibility schemaCompatibility = SchemaCompatibility.checkReaderWriterCompatibility(schema,
-                        record.getSchema());
-                if (!SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE.equals(schemaCompatibility.getType())) {
-                    throw new ConstraintViolationException(ElementConstraintCompatibleSchema.ERROR_MESSAGE);
-                }
-
+                new ElementConstraints().add(new KafkaInputConstraintCompatibleSchema()).validate(record, properties);
                 c.output(record);
             }
             catch (IOException | ConstraintViolationException ex) {
